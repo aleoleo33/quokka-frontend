@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet, Platform, Animated, Dimensions, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HomeScreen } from '../screens/HomeScreen';
 import { ConnectScreen } from '../screens/ConnectScreen';
 import { WorkspaceScreen } from '../screens/WorkspaceScreen';
@@ -31,16 +32,18 @@ const SCREENS: Record<string, React.ComponentType<any>> = {
 };
 
 const CustomTabBar = ({ state, descriptors, navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(state.index)).current;
-  const TAB_BAR_PADDING = 12;
-  const TAB_WIDTH = (WINDOW_WIDTH - (TAB_BAR_PADDING * 2)) / TABS.length;
+  const TAB_BAR_MARGIN = 16;
+  const CONTAINER_PADDING = 8;
+  const TAB_WIDTH = (WINDOW_WIDTH - (TAB_BAR_MARGIN * 2) - (CONTAINER_PADDING * 2)) / TABS.length;
 
   useEffect(() => {
     Animated.spring(slideAnim, {
       toValue: state.index,
       useNativeDriver: true,
-      tension: 60,
-      friction: 10,
+      tension: 65,
+      friction: 11,
     }).start();
   }, [state.index]);
 
@@ -50,7 +53,12 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   });
 
   return (
-    <View style={styles.tabBarContainer}>
+    <View 
+      style={[
+        styles.tabBarContainer, 
+        { bottom: insets.bottom > 0 ? insets.bottom : 16 }
+      ]}
+    >
       <Animated.View 
         style={[
           styles.slidingPill, 
@@ -83,7 +91,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
         return (
           <TouchableOpacity
             key={route.key}
-            activeOpacity={1}
+            activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityState={isFocused ? { selected: true } : {}}
             accessibilityLabel={options.tabBarAccessibilityLabel}
@@ -98,7 +106,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
                 color={isFocused ? '#FFFFFF' : Theme.colors.textSecondary}
               />
             </View>
-            <Text style={[styles.label, isFocused && styles.labelActive]}>{tab.name}</Text>
+            {!isFocused && <Text style={styles.label}>{tab.name}</Text>}
           </TouchableOpacity>
         );
       })}
@@ -122,52 +130,60 @@ export const MainTabs: React.FC = () => {
 const styles = StyleSheet.create({
   tabBarContainer: {
     flexDirection: 'row',
-    backgroundColor: '#EBEBEB',
-    height: Platform.OS === 'ios' ? 80 : 65,
-    paddingHorizontal: 12,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    height: 58,
+    marginHorizontal: 16,
+    borderRadius: 29,
+    paddingHorizontal: 8,
+    position: 'absolute',
+    left: 0,
+    right: 0,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 12,
+    shadowRadius: 16,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   slidingPill: {
     position: 'absolute',
-    top: 6,
-    left: 12,
-    height: 36,
+    top: 8,
+    left: 8,
+    height: 42,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 0,
   },
   pillInner: {
-    width: 48,
-    height: 36,
-    borderRadius: 18,
+    width: 52,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: Theme.colors.primary,
   },
   tabButton: {
     flex: 1,
     alignItems: 'center',
-    paddingTop: 6,
+    justifyContent: 'center',
+    paddingVertical: 4,
     zIndex: 1,
   },
   iconWrap: {
     width: 48,
-    height: 36,
+    height: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 4,
   },
   label: {
-    fontSize: 11,
-    fontFamily: Theme.typography.fontFamily.regular,
+    fontSize: 10,
+    fontFamily: Theme.typography.fontFamily.medium,
     color: Theme.colors.textSecondary,
+    marginTop: 1,
   },
   labelActive: {
-    fontFamily: Theme.typography.fontFamily.medium,
+    fontFamily: Theme.typography.fontFamily.semiBold,
     color: Theme.colors.primary,
   },
 });

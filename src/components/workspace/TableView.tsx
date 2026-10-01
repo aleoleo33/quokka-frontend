@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { useWorkspaceStore, TableRow } from '../../store/workspaceStore';
 
 const COLUMNS = ['A', 'B', 'C', 'D', 'E'] as const;
 
 export const TableView: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const docId = useWorkspaceStore(s => s.activeDocumentId);
   const tables = useWorkspaceStore(s => s.tables);
   const updateRow = useWorkspaceStore(s => s.updateTableRow);
@@ -14,6 +16,12 @@ export const TableView: React.FC = () => {
 
   const table = tables.find(t => t.id === docId);
   const [activeCell, setActiveCell] = useState<{ rowId: string; col: string } | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle');
+
+  const handleSave = () => {
+    setSaveStatus('saved');
+    setTimeout(() => setSaveStatus('idle'), 2000);
+  };
 
   if (!table) {
     return (
@@ -29,7 +37,7 @@ export const TableView: React.FC = () => {
       try {
         const sum = raw.substring(1).split('+').reduce((acc, v) => acc + (parseFloat(v) || 0), 0);
         if (!isNaN(sum)) value = sum.toString();
-      } catch {}
+      } catch { }
     }
     updateRow(table.id, rowId, col, value);
   };
@@ -41,10 +49,28 @@ export const TableView: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
+    >
       <View style={styles.header}>
-        <Text style={styles.title}>{table.title}</Text>
-        <Text style={styles.subtitle}>Structure and track your work</Text>
+        <View style={styles.headerTop}>
+          <View style={{ flex: 1 }}>
+            <TextInput
+              style={styles.title}
+              value={table.title}
+              onChangeText={(t) => useWorkspaceStore.getState().updateTableTitle(table.id, t)}
+              placeholder="Untitled Table"
+              placeholderTextColor={Theme.colors.textSecondary}
+            />
+            <Text style={styles.subtitle}>Structure and track your work</Text>
+          </View>
+          <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.85}>
+            <Feather name={saveStatus === 'saved' ? 'check' : 'save'} size={16} color="#FFF" />
+            <Text style={styles.saveBtnText}>{saveStatus === 'saved' ? 'Saved!' : 'Save'}</Text>
+          </TouchableOpacity>
+        </View>
         <View style={styles.formulaBar}>
           <Text style={styles.fxIcon}>fx</Text>
           <Text style={styles.fxText}>
@@ -54,7 +80,7 @@ export const TableView: React.FC = () => {
       </View>
 
       <ScrollView horizontal bounces={false}>
-        <ScrollView bounces={false}>
+        <ScrollView bounces={false} contentContainerStyle={{ paddingBottom: insets.bottom > 0 ? insets.bottom + 80 : 96 }}>
           <View style={styles.row}>
             <View style={[styles.cell, styles.headerCell, { width: 50 }]} />
             {COLUMNS.map(col => (
@@ -100,7 +126,7 @@ export const TableView: React.FC = () => {
           ))}
         </ScrollView>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -184,5 +210,30 @@ const styles = StyleSheet.create({
   activeCell: {
     borderWidth: 2,
     borderColor: Theme.colors.primary,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
+  saveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Theme.colors.primary,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 10,
+    gap: 6,
+    shadowColor: Theme.colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  saveBtnText: {
+    fontFamily: Theme.typography.fontFamily.semiBold,
+    fontSize: 13,
+    color: '#FFF',
   },
 });

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Theme } from '../../theme';
 import { useWorkspaceStore } from '../../store/workspaceStore';
@@ -13,9 +13,9 @@ const SHAPES = [
 ];
 
 const ARROWS = [
-  { type: 'straight' as const, icon: 'arrow-right' as const },
-  { type: 'curved' as const, icon: 'corner-down-right' as const },
-  { type: 'elbow' as const, icon: 'corner-right-down' as const },
+  { type: 'straight' as const, icon: 'arrow-right' as const, label: 'Straight' },
+  { type: 'curved' as const, icon: 'corner-down-right' as const, label: 'Curved' },
+  { type: 'elbow' as const, icon: 'corner-right-down' as const, label: 'Elbow' },
 ];
 
 interface Props {
@@ -25,6 +25,12 @@ interface Props {
 export const CanvasToolbar: React.FC<Props> = ({ canvasId }) => {
   const addElement = useWorkspaceStore(s => s.addCanvasElement);
   const addArrow = useWorkspaceStore(s => s.addCanvasArrow);
+  const connectionMode = useWorkspaceStore(s => s.connectionMode);
+  const cancelConnection = useWorkspaceStore(s => s.cancelConnection);
+  const canvasTool = useWorkspaceStore(s => s.canvasTool);
+  const setCanvasTool = useWorkspaceStore(s => s.setCanvasTool);
+  const undo = useWorkspaceStore(s => s.undo);
+  const redo = useWorkspaceStore(s => s.redo);
   const [menu, setMenu] = useState<'none' | 'sticky' | 'shape' | 'arrow'>('none');
 
   const toggle = (target: 'sticky' | 'shape' | 'arrow') =>
@@ -64,6 +70,17 @@ export const CanvasToolbar: React.FC<Props> = ({ canvasId }) => {
 
   return (
     <View style={styles.container}>
+      {connectionMode.active && (
+        <View style={styles.connectionBanner}>
+          <Text style={styles.connectionText}>
+            Tap target element to connect
+          </Text>
+          <TouchableOpacity style={styles.cancelBtn} onPress={cancelConnection}>
+            <Feather name="x" size={16} color="#FFF" />
+          </TouchableOpacity>
+        </View>
+      )}
+
       {menu === 'sticky' && (
         <View style={styles.subMenu}>
           {STICKY_COLORS.map(c => (
@@ -87,6 +104,7 @@ export const CanvasToolbar: React.FC<Props> = ({ canvasId }) => {
           {ARROWS.map(a => (
             <TouchableOpacity key={a.type} style={styles.subItem} onPress={() => addCanvasArrow(a.type)}>
               <Feather name={a.icon} size={24} color={Theme.colors.text} />
+              <Text style={styles.subItemLabel}>{a.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -114,6 +132,13 @@ export const CanvasToolbar: React.FC<Props> = ({ canvasId }) => {
         <TouchableOpacity style={styles.btn} onPress={addText}>
           <Feather name="type" size={22} color={Theme.colors.text} />
         </TouchableOpacity>
+        <View style={styles.divider} />
+        <TouchableOpacity style={styles.btn} onPress={() => undo(canvasId)}>
+          <Feather name="corner-up-left" size={22} color={Theme.colors.text} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.btn} onPress={() => redo(canvasId)}>
+          <Feather name="corner-up-right" size={22} color={Theme.colors.text} />
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -134,6 +159,11 @@ const styles = StyleSheet.create({
     ...Theme.shadow.card,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.05)',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    marginVertical: 4,
   },
   btn: {
     padding: 12,
@@ -164,6 +194,38 @@ const styles = StyleSheet.create({
   },
   subItem: {
     padding: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  subItemLabel: {
+    fontSize: 9,
+    fontFamily: Theme.typography.fontFamily.medium,
+    color: Theme.colors.textSecondary,
+    marginTop: 2,
+  },
+  connectionBanner: {
+    position: 'absolute',
+    left: 60,
+    top: -48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Theme.colors.primary,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    ...Theme.shadow.card,
+  },
+  connectionText: {
+    fontSize: 12,
+    fontFamily: Theme.typography.fontFamily.semiBold,
+    color: '#FFFFFF',
+    marginRight: 8,
+  },
+  cancelBtn: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(255,255,255,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },

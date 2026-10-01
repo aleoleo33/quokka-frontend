@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Animated, TouchableWithoutFeedback,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { Theme } from '../../theme';
 import { useWorkspaceStore } from '../../store/workspaceStore';
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export const WorkspaceSidebar: React.FC<Props> = ({ open, onClose, slideAnim, overlayAnim }) => {
+  const insets = useSafeAreaInsets();
   const setActiveView = useWorkspaceStore(s => s.setActiveView);
   const createNote = useWorkspaceStore(s => s.createNote);
   const createCanvas = useWorkspaceStore(s => s.createCanvas);
@@ -35,7 +37,16 @@ export const WorkspaceSidebar: React.FC<Props> = ({ open, onClose, slideAnim, ov
         <Animated.View style={[styles.overlay, { opacity: overlayAnim }]} />
       </TouchableWithoutFeedback>
 
-      <Animated.View style={[styles.panel, { transform: [{ translateX: slideAnim }] }]}>
+      <Animated.View 
+        style={[
+          styles.panel, 
+          { 
+            transform: [{ translateX: slideAnim }],
+            paddingTop: insets.top > 0 ? insets.top + 16 : 56,
+            paddingBottom: insets.bottom > 0 ? insets.bottom + 16 : 16,
+          }
+        ]}
+      >
         <View style={styles.header}>
           <Text style={styles.label}>Personal Workspace</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -88,7 +99,6 @@ const styles = StyleSheet.create({
     top: 0, left: 0, bottom: 0,
     width: SIDEBAR_WIDTH,
     backgroundColor: Theme.colors.bgWarm,
-    paddingTop: 56,
     paddingHorizontal: 16,
     shadowColor: '#000',
     shadowOffset: { width: 4, height: 0 },

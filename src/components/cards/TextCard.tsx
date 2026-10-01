@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.sizes.xl,
     color: Theme.colors.text,
     marginBottom: Theme.spacing.md,
-    lineHeight: 32,
+    lineHeight: 30,
   },
   description: {
     fontFamily: Theme.typography.fontFamily.medium,

@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { Theme } from '../theme';
 import { Header } from '../components/layout/Header';
@@ -14,6 +15,7 @@ import { WorkspaceFab } from '../components/workspace/WorkspaceFab';
 const SIDEBAR_WIDTH = 280;
 
 export const WorkspaceScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
   const activeView = useWorkspaceStore(s => s.activeView);
@@ -47,11 +49,11 @@ export const WorkspaceScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: activeView === 'workspace' ? insets.top : 0 }]}>
       {activeView === 'workspace' ? (
         <Header onMenuPress={openSidebar} />
       ) : (
-        <View style={styles.subHeader}>
+        <View style={[styles.subHeader, { paddingTop: insets.top > 0 ? insets.top : Theme.spacing.md }]}>
           <TouchableOpacity onPress={() => setActiveView('workspace')} style={styles.backBtn}>
             <Feather name="arrow-left" size={20} color={Theme.colors.text} />
             <Text style={styles.backText}>Dashboard</Text>
@@ -84,7 +86,6 @@ const styles = StyleSheet.create({
   },
   subHeader: {
     paddingHorizontal: Theme.spacing.lg,
-    paddingTop: Theme.spacing.xl,
     paddingBottom: Theme.spacing.sm,
     backgroundColor: Theme.colors.bg,
   },
@@ -92,10 +93,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: Theme.colors.border,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.03)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
   },
   backText: {
     fontFamily: Theme.typography.fontFamily.medium,

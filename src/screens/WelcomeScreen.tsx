@@ -12,7 +12,7 @@ interface WelcomeScreenProps {
 
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
   const handleConnect = () => {
-    navigation.navigate('MainTabs');
+    navigation.navigate('Password');
   };
 
   return (

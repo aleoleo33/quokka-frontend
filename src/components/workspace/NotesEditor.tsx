@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Theme } from '../../theme';
 import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { useWorkspaceStore } from '../../store/workspaceStore';
@@ -16,6 +17,7 @@ const HEADING_STYLES: Record<HeadingLevel, { fontSize: number; fontFamily: strin
 };
 
 export const NotesEditor: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const docId = useWorkspaceStore(s => s.activeDocumentId);
   const notes = useWorkspaceStore(s => s.notes);
   const updateNote = useWorkspaceStore(s => s.updateNote);
@@ -33,6 +35,12 @@ export const NotesEditor: React.FC = () => {
   const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right'>('left');
   const [showFontPicker, setShowFontPicker] = useState(false);
   const [showHeadingPicker, setShowHeadingPicker] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle');
+
+  const handleSave = () => {
+    setSaveStatus('saved');
+    setTimeout(() => setSaveStatus('idle'), 2000);
+  };
 
   if (!note) {
     return (
@@ -67,10 +75,26 @@ export const NotesEditor: React.FC = () => {
   const alignIcon = textAlign === 'left' ? 'align-left' : textAlign === 'center' ? 'align-center' : 'align-right';
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
+    >
       <View style={styles.header}>
-        <Text style={styles.title}>{note.title}</Text>
-        <Text style={styles.subtitle}>Linear thought process</Text>
+        <View style={{ flex: 1 }}>
+          <TextInput
+            style={styles.title}
+            value={note.title}
+            onChangeText={(t) => useWorkspaceStore.getState().updateNoteTitle(note.id, t)}
+            placeholder="Untitled Note"
+            placeholderTextColor={Theme.colors.textSecondary}
+          />
+          <Text style={styles.subtitle}>Linear thought process</Text>
+        </View>
+        <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.85}>
+          <Feather name={saveStatus === 'saved' ? 'check' : 'save'} size={16} color="#FFF" />
+          <Text style={styles.saveBtnText}>{saveStatus === 'saved' ? 'Saved!' : 'Save'}</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.formatBar}>
@@ -160,7 +184,7 @@ export const NotesEditor: React.FC = () => {
         </View>
       )}
 
-      <View style={styles.editor}>
+      <View style={[styles.editor, { paddingBottom: insets.bottom > 0 ? insets.bottom + 80 : 96 }]}>
         <TextInput
           style={[
             styles.input,
@@ -184,7 +208,7 @@ export const NotesEditor: React.FC = () => {
       </View>
 
       {hasSelection && (
-        <View style={styles.selectionBar}>
+        <View style={[styles.selectionBar, { bottom: insets.bottom > 0 ? insets.bottom + 76 : 80 }]}>
           <TouchableOpacity style={styles.selectionBtn} onPress={() => send('canvas')}>
             <MaterialCommunityIcons name="transit-connection-variant" size={18} color="#D97757" />
             <Text style={styles.selectionLabel}>To Canvas</Text>
@@ -207,7 +231,13 @@ const styles = StyleSheet.create({
     color: Theme.colors.textSecondary,
     fontFamily: Theme.typography.fontFamily.medium,
   },
-  header: { padding: Theme.spacing.lg, paddingBottom: Theme.spacing.sm },
+  header: {
+    padding: Theme.spacing.lg,
+    paddingBottom: Theme.spacing.sm,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   title: {
     fontSize: 32,
     fontFamily: Theme.typography.fontFamily.bold,
@@ -222,23 +252,29 @@ const styles = StyleSheet.create({
 
   formatBar: {
     backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: Theme.colors.divider,
+    borderColor: 'rgba(0, 0, 0, 0.03)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 4,
+    elevation: 2,
   },
   formatBarInner: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 8,
     gap: 2,
   },
   formatBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.02)',
+    marginHorizontal: 2,
   },
   formatBtnActive: {
     backgroundColor: Theme.colors.primary,
@@ -297,7 +333,6 @@ const styles = StyleSheet.create({
 
   selectionBar: {
     position: 'absolute',
-    bottom: 30,
     alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
@@ -320,5 +355,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginLeft: 6,
     color: Theme.colors.text,
+  },
+  saveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Theme.colors.primary,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 10,
+    gap: 6,
+    shadowColor: Theme.colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  saveBtnText: {
+    fontFamily: Theme.typography.fontFamily.semiBold,
+    fontSize: 13,
+    color: '#FFF',
   },
 });

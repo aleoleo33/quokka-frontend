@@ -20,7 +20,7 @@ export const WorkspaceCard: React.FC<WorkspaceCardProps> = ({ title, description
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.description}>{description}</Text>
         
-        {/* Decorative Grid in the bottom right */}
+        
         <View style={styles.decorativeGrid}>
           <View style={styles.gridRow}>
             <View style={styles.gridCell} />
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   card: {
-    backgroundColor: 'rgba(106, 84, 77, 0.4)',
+    backgroundColor: 'rgba(99, 79, 73, 0.4)',
     padding: Theme.spacing.xl,
     minHeight: 160,
     justifyContent: 'flex-end',

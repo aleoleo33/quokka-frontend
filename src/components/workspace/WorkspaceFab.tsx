@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Animated, TouchableWithoutFeedback,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Theme } from '../../theme';
 import { useWorkspaceStore } from '../../store/workspaceStore';
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export const WorkspaceFab: React.FC<Props> = ({ expanded, onToggle, onClose }) => {
+  const insets = useSafeAreaInsets();
   const createNote = useWorkspaceStore(s => s.createNote);
   const createTable = useWorkspaceStore(s => s.createTable);
   const createCanvas = useWorkspaceStore(s => s.createCanvas);
@@ -64,15 +66,10 @@ export const WorkspaceFab: React.FC<Props> = ({ expanded, onToggle, onClose }) =
 
   return (
     <>
-      {expanded && (
-        <TouchableWithoutFeedback onPress={close}>
-          <View style={styles.overlay} />
-        </TouchableWithoutFeedback>
-      )}
 
       <Animated.View style={[
         styles.menuContainer,
-        { opacity, transform: [{ translateY }, { scale }], pointerEvents: expanded ? 'auto' : 'none' },
+        { opacity, transform: [{ translateY }, { scale }], pointerEvents: expanded ? 'auto' : 'none', bottom: insets.bottom + 156 },
       ]}>
         {actions.map(a => (
           <TouchableOpacity key={a.label} style={styles.menuItem} activeOpacity={0.8} onPress={() => fire(a.onPress)}>
@@ -85,7 +82,7 @@ export const WorkspaceFab: React.FC<Props> = ({ expanded, onToggle, onClose }) =
       </Animated.View>
 
       <TouchableOpacity
-        style={[styles.mainBtn, expanded && styles.mainBtnActive]}
+        style={[styles.mainBtn, expanded && styles.mainBtnActive, { bottom: insets.bottom + 90 }]}
         onPress={toggle}
         activeOpacity={0.9}
       >
@@ -98,13 +95,12 @@ export const WorkspaceFab: React.FC<Props> = ({ expanded, onToggle, onClose }) =
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: Theme.colors.overlay,
+    backgroundColor: 'transparent',
     zIndex: 98,
     elevation: 98,
   },
   mainBtn: {
     position: 'absolute',
-    bottom: Theme.spacing.lg,
     right: Theme.spacing.lg,
     width: 56,
     height: 56,
@@ -121,7 +117,6 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     position: 'absolute',
-    bottom: 90,
     right: Theme.spacing.lg,
     alignItems: 'flex-end',
     zIndex: 99,

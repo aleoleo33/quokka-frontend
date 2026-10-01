@@ -1,33 +1,37 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Theme } from '../theme';
 import { Header } from '../components/layout/Header';
 import { Feather } from '@expo/vector-icons';
 import { BraceletIllustration } from '../components/connect/BraceletIllustration';
-import { PulseDot } from '../components/connect/PulseDot';
-import { SettingRow } from '../components/connect/SettingRow';
 
-const ACTIONS = [
-  { icon: 'bell' as const, label: 'Find Band' },
-  { icon: 'refresh-cw' as const, label: 'Sync' },
-  { icon: 'power' as const, label: 'Restart' },
+type FeatherIconName = React.ComponentProps<typeof Feather>['name'];
+
+const ACTIONS: { icon: FeatherIconName; label: string }[] = [
+  { icon: 'bell', label: 'Find Band' },
+  { icon: 'refresh-cw', label: 'Sync' },
+  { icon: 'power', label: 'Restart' },
 ];
 
 export const ConnectScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const [notifications, setNotifications] = useState(true);
   const [autoSync, setAutoSync] = useState(true);
+  const [batteryLevel] = useState(86);
+  const [signalStrength] = useState('Strong');
+  const [lastSync] = useState('2 min ago');
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={[styles.safe, { paddingTop: insets.top }]}> 
       <Header />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 100 }]}> 
         <Text style={styles.title}>connect.</Text>
 
         <View style={styles.badgeRow}>
           <View style={styles.badge}>
             <View style={styles.dotWrap}>
-              <PulseDot />
-              <View style={styles.greenDot} />
+              <View style={[styles.statusDot, styles.statusDotActive]} />
             </View>
             <Text style={styles.badgeText}>Quokka Band · Connected</Text>
           </View>
@@ -55,6 +59,19 @@ export const ConnectScreen: React.FC = () => {
           </View>
         </View>
 
+        <View style={styles.statusGrid}>
+          <View style={styles.statusCard}>
+            <Text style={styles.statusLabel}>Signal</Text>
+            <Text style={styles.statusValue}>{signalStrength}</Text>
+            <Text style={styles.statusMeta}>Bluetooth link</Text>
+          </View>
+          <View style={[styles.statusCard, styles.statusCardLast]}>
+            <Text style={styles.statusLabel}>Last Sync</Text>
+            <Text style={styles.statusValue}>{lastSync}</Text>
+            <Text style={styles.statusMeta}>Auto refresh</Text>
+          </View>
+        </View>
+
         <Text style={styles.section}>ACTIONS</Text>
         <View style={styles.actionRow}>
           {ACTIONS.map(({ icon, label }) => (
@@ -67,45 +84,60 @@ export const ConnectScreen: React.FC = () => {
           ))}
         </View>
 
-        <Text style={styles.section}>SETTINGS</Text>
+        <Text style={styles.section}>DEVICE STATUS</Text>
         <View style={styles.card}>
-          <SettingRow
-            icon="bell"
-            label="Notifications"
-            sublabel="Mirror phone alerts"
-            right={<Switch value={notifications} onValueChange={setNotifications} trackColor={{ false: '#E0E0E0', true: Theme.colors.primary }} thumbColor="#FFF" />}
-          />
+          <View style={styles.settingRowBase}>
+            <Text style={styles.settingLabel}>Storage Used</Text>
+            <Text style={styles.settingValue}>4.2 GB / 64 GB</Text>
+          </View>
           <View style={styles.divider} />
-          <SettingRow
-            icon="refresh-cw"
-            label="Auto Sync"
-            sublabel="Every 5 minutes"
-            right={<Switch value={autoSync} onValueChange={setAutoSync} trackColor={{ false: '#E0E0E0', true: Theme.colors.primary }} thumbColor="#FFF" />}
-          />
+          <View style={styles.settingRowBase}>
+            <Text style={styles.settingLabel}>Last Sync</Text>
+            <Text style={styles.settingValue}>2 minutes ago</Text>
+          </View>
           <View style={styles.divider} />
-          <SettingRow icon="moon" label="Do Not Disturb" />
-          <View style={styles.divider} />
-          <SettingRow icon="watch" label="Display Settings" />
+          <View style={styles.settingRowBase}>
+            <Text style={styles.settingLabel}>Sync Status</Text>
+            <Text style={styles.settingValue}>Healthy</Text>
+          </View>
         </View>
 
-        <Text style={styles.section}>DEVICE INFO</Text>
+        <Text style={styles.section}>SETTINGS</Text>
         <View style={styles.card}>
-          <SettingRow icon="cpu" label="Firmware" sublabel="v2.1.4 (up to date)" right={<View />} />
+          <View style={styles.settingRow}>
+            <View>
+              <Text style={styles.settingLabel}>Notifications</Text>
+              <Text style={styles.settingSub}>Mirror phone alerts</Text>
+            </View>
+            <Switch value={notifications} onValueChange={setNotifications} trackColor={{ false: '#E0E0E0', true: Theme.colors.primary }} thumbColor="#FFF" />
+          </View>
           <View style={styles.divider} />
-          <SettingRow icon="hash" label="Serial Number" sublabel="QB01-2024-00491" right={<View />} />
+          <View style={styles.settingRow}>
+            <View>
+              <Text style={styles.settingLabel}>Auto Sync</Text>
+              <Text style={styles.settingSub}>Every 5 minutes</Text>
+            </View>
+            <Switch value={autoSync} onValueChange={setAutoSync} trackColor={{ false: '#E0E0E0', true: Theme.colors.primary }} thumbColor="#FFF" />
+          </View>
           <View style={styles.divider} />
-          <TouchableOpacity activeOpacity={0.7}>
-            <SettingRow icon="trash-2" label="Unpair Device" />
+          <TouchableOpacity style={styles.settingRow} activeOpacity={0.7}>
+            <Text style={styles.settingLabel}>Do Not Disturb</Text>
+            <Feather name="chevron-right" size={18} color={Theme.colors.textSecondary} />
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity style={styles.settingRow} activeOpacity={0.7}>
+            <Text style={styles.settingLabel}>Display Settings</Text>
+            <Feather name="chevron-right" size={18} color={Theme.colors.textSecondary} />
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Theme.colors.bg },
-  content: { paddingHorizontal: Theme.spacing.lg, paddingBottom: 100 },
+  content: { paddingHorizontal: Theme.spacing.lg },
   title: {
     fontSize: 38,
     fontFamily: Theme.typography.fontFamily.bold,
@@ -127,11 +159,47 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   dotWrap: { width: 10, height: 10, alignItems: 'center', justifyContent: 'center', marginRight: 5 },
-  greenDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Theme.colors.success },
+  statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Theme.colors.borderLight },
+  statusDotActive: { backgroundColor: Theme.colors.success },
   badgeText: {
     fontFamily: Theme.typography.fontFamily.semiBold,
     fontSize: 12,
     color: Theme.colors.successText,
+  },
+  statusGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: Theme.spacing.lg,
+    gap: Theme.spacing.sm,
+  },
+  statusCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: Theme.borderRadius.md,
+    padding: Theme.spacing.md,
+    ...Theme.shadow.subtle,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+  },
+  statusLabel: {
+    fontFamily: Theme.typography.fontFamily.semiBold,
+    fontSize: 11,
+    color: Theme.colors.textSecondary,
+    marginBottom: 4,
+  },
+  statusValue: {
+    fontFamily: Theme.typography.fontFamily.bold,
+    fontSize: 20,
+    color: Theme.colors.text,
+  },
+  statusMeta: {
+    fontFamily: Theme.typography.fontFamily.regular,
+    fontSize: 11,
+    color: Theme.colors.textSecondary,
+    marginTop: 8,
+  },
+  statusCardLast: {
+    marginRight: 0,
   },
   deviceCard: {
     backgroundColor: '#FFFFFF',
@@ -228,5 +296,33 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Theme.colors.border,
   },
-  divider: { height: 1, backgroundColor: '#F5F2EF', marginLeft: 48 },
+  divider: { height: 1, backgroundColor: '#F5F2EF', marginLeft: 0 },
+  settingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Theme.spacing.md,
+  },
+  settingRowBase: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Theme.spacing.md,
+  },
+  settingLabel: {
+    fontFamily: Theme.typography.fontFamily.medium,
+    fontSize: 14,
+    color: Theme.colors.text,
+  },
+  settingSub: {
+    fontFamily: Theme.typography.fontFamily.regular,
+    fontSize: 12,
+    color: Theme.colors.textSecondary,
+    marginTop: 2,
+  },
+  settingValue: {
+    fontFamily: Theme.typography.fontFamily.regular,
+    fontSize: 13,
+    color: Theme.colors.textSecondary,
+  },
 });
